@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Number Plate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 90%;
+            margin: 5%;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+
+        
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>Parking Complaint</h2>
+        <form action="submit.html" method="POST">
+            <label for="number_plate">Enter Number Plate:</label>
+            <input type="text" id="number_plate" name="number_plate" placeholder="e.g. ABC-1234" required>
+            <button type="submit">Submit</button>
+            <div class="form-container">
+                <h2>Submit Image Proof Code</h2>
+                
+                <!--<label for="image_proof_code">Enter Image Proof Code:</label>
+                <input type="text" id="image_proof_code" name="image_proof_code" placeholder="Enter code here" required>
+                <button type="submit">Submit</button> -->
+
+            <label for="image">Select an Image:</label>
+            <input type="file" id="image" name="image" accept="image/*" required>
+            <button type="submit">Upload</button>
+
+            <input type="checkbox" id="subscribe" name="subscribe" value="yes">
+            <label for="subscribe">I agree that above information is correct and if found wrong then i shall be responsible for the same</label>
+                
+            </div>
+        </form>
+    </div>
+
+    
+
+</body>
+</html>

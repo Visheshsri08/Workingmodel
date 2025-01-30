@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 100vh;
+        }
+
+        .parking-icon {
+            text-align: center;
+            font-size: 30px;
+            line-height: 60px;
+            border-radius: 50%;
+            background-color: #f4f4f4;
+            border: 2px solid #ddd;
+        }
+
+        .popup button {
+            margin: 5px 0;
+            padding: 5px 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .popup button:hover {
+            background-color: #0056b3;
+        }
+
+        #prebooking-panel {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        #prebooking-panel input,
+        #prebooking-panel select,
+        #prebooking-panel button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #prebooking-panel button {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+        }
+
+        #prebooking-panel button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="prebooking-panel">
+        <h3>Prebooking</h3>
+        <label for="user-phone">Your Phone Number</label>
+        <input type="tel" id="user-phone" placeholder="e.g., +91 9876543210" />
+        <label for="local-phone">Parking Contact</label>
+        <input type="tel" id="local-phone" disabled />
+        <label for="payment-method">Payment Method</label>
+        <select id="payment-method">
+            <option value="credit-card">Credit Card</option>
+            <option value="debit-card">Debit Card</option>
+            <option value="upi">UPI</option>
+            <option value="cash">Cash</option>
+        </select>
+        <button onclick="completeBooking()">Complete Booking</button>
+        <button onclick="closeBookingPanel()">Cancel</button>
+    </div>
+
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([28.6139, 77.2090], 12);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        // Parking spots data
+        var parkingSpots = [
+            { name: "Connaught Place Parking", coords: [28.6304, 77.2177], rating: 4.5, contact: "+91 9876543210" },
+            { name: "India Gate Parking", coords: [28.6129, 77.2295], rating: 4.2, contact: "+91 8765432109" },
+            { name: "Khan Market Parking", coords: [28.6002, 77.2270], rating: 4.0, contact: "+91 7654321098" }
+        ];
+
+        // Define the parking icon
+        var parkingIcon = L.divIcon({
+            className: 'parking-icon',
+            html: '🚗',
+            iconSize: [60, 60],
+        });
+
+        // Function to add parking spots
+        function addParkingSpots() {
+            parkingSpots.forEach((spot, index) => {
+                const marker = L.marker(spot.coords, { icon: parkingIcon }).addTo(map);
+
+                const popupContent = `
+                    <div class="popup">
+                        <b>${spot.name}</b><br>
+                        Rating: ${spot.rating} ⭐<br>
+                        <button onclick="showBookingOptions(${index})">Prebook</button><br>
+                        <button onclick="alert('Valet service is available for ${spot.name}.')">Valet Service</button>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+            });
+        }
+
+        // Show prebooking panel
+        function showBookingOptions(index) {
+            const spot = parkingSpots[index];
+            document.getElementById('prebooking-panel').style.display = 'block';
+            document.getElementById('local-phone').value = spot.contact;
+        }
+
+        // Close prebooking panel
+        function closeBookingPanel() {
+            document.getElementById('prebooking-panel').style.display = 'none';
+        }
+
+        // Complete booking function
+        function completeBooking() {
+            const userPhone = document.getElementById('user-phone').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+
+            if (!userPhone) {
+                alert("Please enter your phone number!");
+                return;
+            }
+
+            alert(`Booking confirmed! Payment method: ${paymentMethod}`);
+            closeBookingPanel();
+        }
+
+        // Add parking spots to the map
+        addParkingSpots();
+    </script>
+</body>
+</html>
+

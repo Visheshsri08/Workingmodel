@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parking Locator</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    #map {
+      height: 100vh;
+    }
+    .popup {
+      text-align: center;
+    }
+    .popup button {
+      margin-top: 5px;
+      padding: 5px 10px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    .popup button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Initialize the map
+    const map = L.map('map').setView([28.6139, 77.2090], 13); // Default to Delhi
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Get user's current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userCoords = [position.coords.latitude, position.coords.longitude];
+          
+          // Add user marker
+          L.marker(userCoords).addTo(map)
+            .bindPopup("<b>You are here!</b>")
+            .openPopup();
+
+          map.setView(userCoords, 15);
+
+          // Show nearby parking spots
+          addParkingSpots(userCoords);
+        },
+        () => {
+          alert("Unable to fetch your location.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+
+    // Function to add parking spots
+    function addParkingSpots(userCoords) {
+      const parkingSpots = [
+        { coords: [28.6149, 77.2090], name: "Parking 1", rating: 4.5 },
+        { coords: [28.6155, 77.2075], name: "Parking 2", rating: 4.2 },
+        { coords: [28.6125, 77.2100], name: "Parking 3", rating: 3.9 },
+        { coords: [28.6160, 77.2080], name: "Parking 4", rating: 4.1 },
+        { coords: [28.6170, 77.2110], name: "Parking 5", rating: 3.8 },
+        { coords: [28.6135, 77.2060], name: "Parking 6", rating: 4.0 },
+        { coords: [28.6185, 77.2095], name: "Parking 7", rating: 4.3 },
+        { coords: [28.6115, 77.2070], name: "Parking 8", rating: 3.7 },
+        { coords: [28.6100, 77.2055], name: "Parking 9", rating: 4.4 },
+        { coords: [28.6190, 77.2120], name: "Parking 10", rating: 4.0 },
+        { lat: 28.652946, lon: 77.302284, name: "Parking Area 11" },
+        { lat: 28.652955, lon: 77.300000, name: "Parking Area 12" },
+        { lat:  28.6554, lon: 77.3048, name: "Parking Area 13" },
+        { lat:  28.6558, lon: 77.2978, name: "Parking Area 14" },
+      ];
+
+      const parkingIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/747/747376.png', // Car symbol icon
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+
+      parkingSpots.forEach((spot) => {
+        const marker = L.marker(spot.coords, { icon: parkingIcon, title: spot.name });
+        marker.addTo(map);
+
+        const popupContent = `
+          <div class="popup">
+            <b>${spot.name}</b><br>
+            Rating: ${spot.rating} ⭐<br>
+            <button onclick="alert('Prebooking for ${spot.name} is not yet available.')">Prebook</button>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent);
+      });
+    }
+  </script>
+</body>
+</html>

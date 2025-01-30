@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Buttons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+            font-size: 2em;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #ff7e5f;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin: 10px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #feb47b;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    Parking Options
+</header>
+
+<div class="button-container">
+    <button onclick="window.location.href='http://127.0.0.1:3000/final/finalgoodtogoproject.html'">Nearby Parking</button>
+    <button onclick="window.location.href='http://127.0.0.1:3000/final/parkingconvertor.html'">Your Location</button>
+</div>
+
+</body>
+</html>

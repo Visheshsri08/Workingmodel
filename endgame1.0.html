@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Locator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.css" />
+    <style>
+        #map {
+            height: 100vh;
+            width: 80%;
+            float: left;
+        }
+
+        #side-panel {
+            width: 20%;
+            height: 100vh;
+            float: left;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-left: 2px solid #ddd;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .popup {
+            text-align: center;
+        }
+
+        .popup button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .popup button:hover {
+            background-color: #45a049;
+        }
+
+        .booking-form {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .booking-form input,
+        .booking-form select {
+            padding: 5px;
+            margin: 5px;
+            width: 80%;
+        }
+
+        .payment-options {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .payment-options input {
+            margin: 10px;
+        }
+
+        .booking-status {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .confirmed {
+            color: green;
+        }
+
+        .unavailable {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="side-panel">
+        <h3>Prebook Parking</h3>
+        <div id="booking-options">
+            <p>Select a parking spot to see options here.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
+    <script>
+        var parkingIcon = L.divIcon({
+            className: 'parking-icon',
+            html: '🚗',
+            iconSize: [60, 60],
+        });
+        <style>
+            .parking-icon{
+                text-align: center;
+            font-size: 30px;
+            /* Adjust size of emoji */
+            line-height: 60px;
+            /* Center the emoji vertically */
+            border-radius: 50%;
+            /* Optional: Add a circular background */
+            background-color: #f4f4f4;
+            /* Optional: Light gray background */
+            border: 2px solid #ddd;
+            /* Optional: Add a border */
+        }
+        </style>
+
+        // Function to add parking spots with custom icon
+        function addParkingSpots() {
+            parkingSpots.forEach((spot, index) => {
+                const marker = L.marker(spot.coords, { icon: parkingIcon }).addTo(map);
+
+                const popupContent = `
+            <div class="popup">
+                <b>${spot.name}</b><br>
+                Rating: ${spot.rating} ⭐<br>
+                <button onclick="showBookingOptions(${index})">Prebook</button><br>
+                <button onclick="alert('Valet service is available for ${spot.name}.')">Valet Service</button>
+            </div>
+        `;
+
+                marker.bindPopup(popupContent);
+            });
+        }
+
+        // Add parking spots to the map
+        addParkingSpots();
+    </script>
+    <script>
+        const map = L.map('map').setView([28.6139, 77.2090], 13); // Default to Delhi
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        const parkingSpots = [
+            { coords: [28.6149, 77.2090], name: "Parking 1", rating: 4.5, available: true, contact: "+91 9876543210" },
+            { coords: [28.6207, 77.2230], name: "Okhla Phase 2 Parking", rating: 4.1, available: true, contact: "+91 9123456789" },
+            { coords: [28.6524, 77.2705], name: "Moti Bagh Parking", rating: 3.9, available: true, contact: "+91 9988776655" }
+        ];
+
+        function addParkingSpots() {
+            parkingSpots.forEach((spot, index) => {
+                const marker = L.marker(spot.coords).addTo(map);
+
+                const popupContent = `
+                    <div class="popup">
+                        <b>${spot.name}</b><br>
+                        Rating: ${spot.rating} ⭐<br>
+                        <button onclick="showBookingOptions(${index})">Prebook</button><br>
+                        <button onclick="alert('Valet service is available for ${spot.name}.')">Valet Service</button>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+            });
+        }
+
+        function showBookingOptions(index) {
+            const spot = parkingSpots[index];
+
+            if (!spot.available) {
+                alert("Sorry, this parking is fully booked.");
+                return;
+            }
+
+            const formHtml = `
+                <div class="booking-form">
+                    <label for="time">Select Time Slot:</label>
+                    <select id="time">
+                        <option value="morning">Morning (8 AM - 12 PM)</option>
+                        <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+                        <option value="evening">Evening (4 PM - 8 PM)</option>
+                    </select><br>
+                    <label for="name">Your Name:</label>
+                    <input type="text" id="name" placeholder="Enter your name"><br>
+                    <label for="phone">Your Phone Number:</label>
+                    <input type="tel" id="phone" placeholder="Enter your phone number"><br>
+                    <label>Parking Manager's Contact:</label>
+                    <p>${spot.contact}</p><br>
+                    <div class="payment-options">
+                        <label for="payment-method">Select Payment Method:</label>
+                        <select id="payment-method">
+                            <option value="credit">Credit Card</option>
+                            <option value="debit">Debit Card</option>
+                            <option value="upi">UPI</option>
+                        </select><br>
+                        <input type="number" id="amount" placeholder="Amount ₹" value="100" readonly><br>
+                        <button onclick="confirmBooking(${index})">Confirm Booking</button>
+                    </div>
+                </div>
+            `;
+
+            const bookingOptionsDiv = document.getElementById('booking-options');
+            bookingOptionsDiv.innerHTML = formHtml;
+
+            // Initialize the international phone input plugin
+            const phoneInput = document.getElementById("phone");
+            intlTelInput(phoneInput, {
+                initialCountry: "in", // Default to India
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
+            });
+        }
+
+        function confirmBooking(index) {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const timeSlot = document.getElementById('time').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+
+            if (!name || !phone || !paymentMethod) {
+                alert("Please fill all the details.");
+                return;
+            }
+
+            alert(`Payment of ₹100 via ${paymentMethod} has been processed. Booking confirmed for ${parkingSpots[index].name}!`);
+
+            const confirmationHtml = `
+                <div class="popup">
+                    <b>Booking Confirmed for ${parkingSpots[index].name}</b><br>
+                    Name: ${name}<br>
+                    Phone: ${phone}<br>
+                    Time Slot: ${timeSlot}<br>
+                    Payment Method: ${paymentMethod}<br>
+                    <span class="confirmed">Your booking is confirmed!</span>
+                </div>
+            `;
+
+            document.getElementById('booking-options').innerHTML = confirmationHtml;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userCoords = [position.coords.latitude, position.coords.longitude];
+                L.marker(userCoords).addTo(map).bindPopup("<b>You are here!</b>").openPopup();
+                map.setView(userCoords, 14);
+                addParkingSpots();
+            },
+            () => {
+                alert("Unable to fetch your location.");
+                addParkingSpots();
+            }
+        );
+    </script>
+</body>
+
+</html>

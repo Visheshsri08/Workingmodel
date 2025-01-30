@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Locator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <style>
+        #map {
+            height: 100vh;
+            width: 80%;
+            float: left;
+        }
+
+        #side-panel {
+            width: 20%;
+            height: 100vh;
+            float: left;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-left: 2px solid #ddd;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .popup {
+            text-align: center;
+        }
+
+        .popup button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .popup button:hover {
+            background-color: #45a049;
+        }
+
+        .parking-icon {
+            font-size: 40px;
+            line-height: 60px;
+            text-align: center;
+        }
+
+        .distance-info {
+            margin-top: 10px;
+        }
+
+        .near-message {
+            color: green;
+        }
+
+        .far-message {
+            color: red;
+        }
+
+        .booking-form {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .booking-form input,
+        .booking-form select {
+            padding: 5px;
+            margin: 5px;
+            width: 80%;
+        }
+
+        .payment-options {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .payment-options input {
+            margin: 10px;
+        }
+
+        .booking-status {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .confirmed {
+            color: green;
+        }
+
+        .unavailable {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="side-panel">
+        <h3>Prebook Parking</h3>
+        <div id="booking-options">
+            <p>Select a parking spot to see options here.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+    <script>
+        const map = L.map('map').setView([28.6139, 77.2090], 13); // Default to Delhi
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        var parkingIcon = L.divIcon({
+            className: 'parking-icon',
+            html: '🚗',
+            iconSize: [60, 60],
+        });
+
+        const parkingSpots = [
+            { coords: [28.6207, 77.2230], name: "Okhla Phase 2 Parking", rating: 4.1},
+            { coords: [28.6524, 77.2705], name: "Moti Bagh Parking", rating: 3.9},
+            { coords: [28.6149, 77.2090], name: "Parking 1", rating: 4.5 },
+                { coords: [28.6207, 77.2230], name: "Okhla Phase 2 Parking", rating: 4.1 },
+                { coords: [28.6524, 77.2705], name: "Moti Bagh Parking", rating: 3.9 },
+                { coords: [28.6880, 77.0847], name: "Rohini Sector 24 Parking", rating: 4.0 },
+                { coords: [28.5485, 77.2365], name: "Green Park Parking", rating: 4.2 },
+                { coords: [28.5325, 77.1530], name: "AIIMS Parking", rating: 4.1 },
+                { coords: [28.6556, 77.2323], name: "Janakpuri Parking", rating: 3.8 },
+                { coords: [28.4790, 77.0890], name: "Noida Sector 62 Parking", rating: 4.3 },
+                { coords: [28.6125, 77.2279], name: "Central Delhi Parking", rating: 4.0 },
+                { coords: [28.6353, 77.2065], name: "Sarai Kale Khan Parking", rating: 4.1 },
+                { coords: [28.6214, 77.1205], name: "Daryaganj Parking", rating: 3.8 },
+                { coords: [28.6130, 77.1123], name: "Rajendra Place Parking", rating: 4.2 },
+                { coords: [28.6764, 77.1148], name: "Pitampura Parking", rating: 4.0 },
+                { coords: [28.5769, 77.1102], name: "Vasant Vihar Parking", rating: 3.9 },
+                { coords: [28.5312, 77.2399], name: "Chhatarpur Parking", rating: 4.3 },
+                { coords: [28.6215, 77.2456], name: "Moolchand Parking", rating: 4.1 },
+                { coords: [28.6230, 77.1876], name: "Hazrat Nizamuddin Parking", rating: 4.0 },
+                { coords: [28.5267, 77.2094], name: "Panchsheel Park Parking", rating: 4.2 },
+                { coords: [28.5615, 77.2290], name: "Kailash Colony Parking", rating: 4.0 },
+                { coords: [28.4939, 77.2465], name: "Mayur Vihar Phase 1 Parking", rating: 4.1 },
+                { coords: [28.5053, 77.1348], name: "Karkardooma Parking", rating: 4.2 },
+                { coords: [28.6440, 77.2277], name: "Sarai Rohilla Parking", rating: 4.1 },
+                { coords: [28.6891, 77.1406], name: "Rohini Sector 19 Parking", rating: 3.8 },
+                { coords: [28.6148, 77.2223], name: "Bengali Market Parking", rating: 4.0 },
+                { coords: [28.5865, 77.2393], name: "Saket Parking", rating: 4.2 },
+                { coords: [28.5372, 77.2626], name: "Moolchand Metro Parking", rating: 4.3 },
+                { coords: [28.6547, 77.2018], name: "Lajpat Nagar Market Parking", rating: 3.9 },
+                { coords: [28.5163, 77.3097], name: "Mayur Vihar Phase 3 Parking", rating: 4.1 },
+                { coords: [28.5079, 77.2800], name: "Shahdara Parking", rating: 3.8 },
+                { coords: [28.6721, 77.2203], name: "Vikas Puri Parking", rating: 4.2 },
+                { coords: [28.6950, 77.0892], name: "Rohini Sector 7 Parking", rating: 4.0 },
+                { coords: [28.6445, 77.2881], name: "Madhuban Chowk Parking", rating: 4.1 },
+                { coords: [28.6906, 77.2288], name: "Model Town Parking", rating: 3.9 },
+                { coords: [28.5859, 77.2715], name: "Malviya Nagar Parking", rating: 4.0 },
+                { coords: [28.6120, 77.2831], name: "Sarai Jullena Parking", rating: 4.2 },
+                { coords: [28.6513, 77.2044], name: "Dwarka Sector 12 Parking", rating: 3.8 },
+                { coords: [28.5199, 77.2811], name: "Krishna Nagar Parking", rating: 4.1 },
+                { coords: [28.6652, 77.1315], name: "Bawana Parking", rating: 4.0 },
+                { coords: [28.4933, 77.0452], name: "Sector 18 Noida Parking", rating: 4.1 },
+                { coords: [28.5411, 77.2952], name: "Surajmal Vihar Parking", rating: 4.0 },
+                { coords: [28.5368, 77.2861], name: "Gandhi Nagar Parking", rating: 4.2 },
+                { coords: [28.6778, 77.1307], name: "Sector 23 Rohini Parking", rating: 3.9 },
+                { coords: [28.6796, 77.1430], name: "Sector 5 Rohini Parking", rating: 4.0 },
+                { coords: [28.6945, 77.2125], name: "Shalimar Bagh Parking", rating: 4.1 },
+                { coords: [28.4984, 77.0717], name: "Sector 51 Noida Parking", rating: 4.2 },
+                { coords: [28.6594, 77.2034], name: "Rohini Sector 16 Parking", rating: 4.0 },
+                { coords: [28.5764, 77.2078], name: "Lajpat Nagar Parking", rating: 4.3 }
+            // Add more spots with availability status
+        ];
+
+        function addParkingSpots(userCoords) {
+            parkingSpots.forEach((spot, index) => {
+                const marker = L.marker(spot.coords, { icon: parkingIcon, title: spot.name });
+                marker.addTo(map);
+
+                const distance = calculateDistance(userCoords, spot.coords);
+                const proximityMessage = (distance <= 500) ? 'This parking is near to you.' : 'This parking is far from you.';
+
+                const bookingStatus = spot.available ? 'Available' : 'Available';
+
+                const popupContent = `
+                    <div class="popup">
+                        <b>${spot.name}</b><br>
+                        Rating: ${spot.rating} ⭐<br>
+                        <button onclick="showBookingOptions(${index})">Prebook</button><br>
+                        <button onclick="alert('Valet service for ${spot.name} is available.')">Valet Service</button><br>
+                        <div class="distance-info">
+                            <b>Distance: ${distance.toFixed(2)} meters</b><br>
+                            <span class="${(distance <= 500) ? 'near-message' : 'far-message'}">${proximityMessage}</span>
+                        </div>
+                        <div class="booking-status ${spot.available}"
+                            Status: ${bookingStatus}
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+            });
+        }
+
+        function calculateDistance(userCoords, parkingCoords) {
+            const userLatLng = L.latLng(userCoords);
+            const parkingLatLng = L.latLng(parkingCoords);
+            return userLatLng.distanceTo(parkingLatLng); // distance in meters
+        }
+
+        function showBookingOptions(spotIndex) {
+            const spot = parkingSpots[spotIndex];
+
+            const formHtml = `
+                <div class="booking-form">
+                    <label for="time">Select Time Slot:</label>
+                    <select id="time">
+                        <option value="morning">Morning (8 AM - 12 PM)</option>
+                        <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+                        <option value="evening">Evening (4 PM - 8 PM)</option>
+                    </select><br>
+                    <label for="name">Your Name:</label>
+                    <input type="text" id="name" placeholder="Enter your name"><br>
+                    
+                    <!-- Payment Section -->
+                    <div class="payment-options">
+                        <label for="payment-method">Select Payment Method:</label>
+                        <select id="payment-method">
+                            <option value="credit">Credit Card</option>
+                            <option value="debit">Debit Card</option>
+                            <option value="upi">UPI</option>
+                        </select><br>
+                        <input type="number" id="amount" placeholder="Amount ₹" value="100" readonly><br>
+                        <button onclick="confirmBooking(${spotIndex})">Confirm Booking</button>
+                    </div>
+                </div>
+            `;
+
+            const bookingOptionsDiv = document.getElementById('booking-options');
+            bookingOptionsDiv.innerHTML = formHtml;
+        }
+
+        function confirmBooking(spotIndex) {
+            const spot = parkingSpots[spotIndex];
+            const name = document.getElementById('name').value;
+            const timeSlot = document.getElementById('time').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+
+            if (!name) {
+                alert("Please enter your name.");
+                return;
+            }
+
+            if (!paymentMethod) {
+                alert("Please select a payment method.");
+                return;
+            }
+
+            // Simulate payment confirmation
+            alert(`Payment of ₹100 via ${paymentMethod} has been processed.`);
+
+            // Simulate booking
+            parkingSpots[spotIndex].available = false; // Mark as booked
+
+            const confirmationMessage = `
+                <div class="popup">
+                    <b>Booking Confirmed for ${spot.name}</b><br>
+                    Name: ${name}<br>
+                    Time Slot: ${timeSlot}<br>
+                    Payment Method: ${paymentMethod}<br>
+                    <span class="confirmed">Your booking is confirmed!</span><br>
+                    <button onclick="alert('You can now proceed to the parking spot.')">Proceed</button>
+                </div>
+            `;
+
+            const bookingOptionsDiv = document.getElementById('booking-options');
+            bookingOptionsDiv.innerHTML = confirmationMessage;
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userCoords = [position.coords.latitude, position.coords.longitude];
+                    L.marker(userCoords).addTo(map)
+                        .bindPopup("<b>You are here!</b>").openPopup();
+                    map.setView(userCoords, 15);
+                    addParkingSpots(userCoords);
+                },
+                () => {
+                    alert("Unable to fetch your location.");
+                }
+            );
+        }
+
+        var geocoder = L.Control.geocoder({
+            geocoder: new L.Control.Geocoder.Nominatim()
+        }).addTo(map);
+
+        geocoder.on('markgeocode', function (e) {
+            const latlng = e.geocode.center;
+            map.setView(latlng, 15);
+            L.marker(latlng).addTo(map)
+                .bindPopup("<b>Selected Location</b>").openPopup();
+            addParkingSpots(latlng); // Add parking spots near the searched location
+        });
+    </script>
+</body>
+
+</html>

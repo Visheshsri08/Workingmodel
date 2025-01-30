@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Locator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <style>
+        #map {
+            height: 100vh;
+            width: 80%;
+            float: left;
+        }
+
+        #side-panel {
+            width: 20%;
+            height: 100vh;
+            float: left;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-left: 2px solid #ddd;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .popup {
+            text-align: center;
+        }
+
+        .popup button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .popup button:hover {
+            background-color: #45a049;
+        }
+
+        .parking-icon {
+            font-size: 60px;
+            line-height: 60px;
+            text-align: center;
+        }
+
+        .distance-info {
+            margin-top: 10px;
+        }
+
+        .near-message {
+            color: green;
+        }
+
+        .far-message {
+            color: red;
+        }
+
+        .booking-form {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .booking-form input,
+        .booking-form select {
+            padding: 5px;
+            margin: 5px;
+            width: 80%;
+        }
+
+        .booking-status {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .confirmed {
+            color: green;
+        }
+
+        .unavailable {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="side-panel">
+        <h3>Prebook Parking</h3>
+        <div id="booking-options">
+            <p>Select a parking spot to see options here.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+    <script>
+        const map = L.map('map').setView([28.6139, 77.2090], 13); // Default to Delhi
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        var parkingIcon = L.divIcon({
+            className: 'parking-icon',
+            html: '🚗',
+            iconSize: [60, 60],
+        });
+
+        const parkingSpots = [
+            { coords: [28.6149, 77.2090], name: "Parking 1", rating: 4.5, available: true },
+            { coords: [28.6207, 77.2230], name: "Okhla Phase 2 Parking", rating: 4.1, available: true },
+            { coords: [28.6524, 77.2705], name: "Moti Bagh Parking", rating: 3.9, available: true },
+            // Add more spots with availability status
+        ];
+
+        function addParkingSpots(userCoords) {
+            parkingSpots.forEach((spot, index) => {
+                const marker = L.marker(spot.coords, { icon: parkingIcon, title: spot.name });
+                marker.addTo(map);
+
+                const distance = calculateDistance(userCoords, spot.coords);
+                const proximityMessage = (distance <= 500) ? 'This parking is near to you.' : 'This parking is far from you.';
+
+                const bookingStatus = spot.available ? 'Available' : 'Fully Booked';
+
+                const popupContent = `
+                    <div class="popup">
+                        <b>${spot.name}</b><br>
+                        Rating: ${spot.rating} ⭐<br>
+                        <button onclick="showBookingOptions(${index})">Prebook</button><br>
+                        <button onclick="alert('Valet service for ${spot.name} is available.')">Valet Service</button><br>
+                        <div class="distance-info">
+                            <b>Distance: ${distance.toFixed(2)} meters</b><br>
+                            <span class="${(distance <= 500) ? 'near-message' : 'far-message'}">${proximityMessage}</span>
+                        </div>
+                        <div class="booking-status ${spot.available ? 'available' : 'unavailable'}">
+                            Status: ${bookingStatus}
+                        </div>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+            });
+        }
+
+        function calculateDistance(userCoords, parkingCoords) {
+            const userLatLng = L.latLng(userCoords);
+            const parkingLatLng = L.latLng(parkingCoords);
+            return userLatLng.distanceTo(parkingLatLng); // distance in meters
+        }
+
+        function showBookingOptions(spotIndex) {
+            const spot = parkingSpots[spotIndex];
+
+            if (!spot.available) {
+                alert("Sorry, this parking is fully booked.");
+                return;
+            }
+
+            const formHtml = `
+                <div class="booking-form">
+                    <label for="time">Select Time Slot:</label>
+                    <select id="time">
+                        <option value="morning">Morning (8 AM - 12 PM)</option>
+                        <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+                        <option value="evening">Evening (4 PM - 8 PM)</option>
+                    </select><br>
+                    <label for="name">Your Name:</label>
+                    <input type="text" id="name" placeholder="Enter your name"><br>
+                    <button onclick="confirmBooking(${spotIndex})">Confirm Booking</button>
+                </div>
+            `;
+
+            const bookingOptionsDiv = document.getElementById('booking-options');
+            bookingOptionsDiv.innerHTML = formHtml;
+        }
+
+        function confirmBooking(spotIndex) {
+            const spot = parkingSpots[spotIndex];
+            const name = document.getElementById('name').value;
+            const timeSlot = document.getElementById('time').value;
+
+            if (!name) {
+                alert("Please enter your name.");
+                return;
+            }
+
+            // Simulate booking
+            parkingSpots[spotIndex].available = false; // Mark as booked
+
+            const confirmationMessage = `
+                <div class="popup">
+                    <b>Booking Confirmed for ${spot.name}</b><br>
+                    Name: ${name}<br>
+                    Time Slot: ${timeSlot}<br>
+                    <span class="confirmed">Your booking is confirmed!</span><br>
+                    <button onclick="alert('You can now proceed to the parking spot.')">Proceed</button>
+                </div>
+            `;
+
+            const bookingOptionsDiv = document.getElementById('booking-options');
+            bookingOptionsDiv.innerHTML = confirmationMessage;
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userCoords = [position.coords.latitude, position.coords.longitude];
+                    L.marker(userCoords).addTo(map)
+                        .bindPopup("<b>You are here!</b>").openPopup();
+                    map.setView(userCoords, 15);
+                    addParkingSpots(userCoords);
+                },
+                () => {
+                    alert("Unable to fetch your location.");
+                }
+            );
+        }
+
+        var geocoder = L.Control.geocoder({
+            geocoder: new L.Control.Geocoder.Nominatim()
+        }).addTo(map);
+
+        geocoder.on('markgeocode', function (e) {
+            const latlng = e.geocode.center;
+            map.setView(latlng, 15);
+            L.marker(latlng).addTo(map)
+                .bindPopup("<b>Selected Location</b>").openPopup();
+            addParkingSpots(latlng); // Add parking spots near the searched location
+        });
+    </script>
+</body>
+
+</html>
+

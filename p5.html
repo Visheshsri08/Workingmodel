@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map with Nearby Parking and Navigation</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <style>
+        #map { height: 500px; }
+        .parking-icon {
+            background-color: #ffcc00;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h2>Search for Location and Find Nearby Parking</h2>
+    <input type="text" id="locationSearch" placeholder="Enter location (e.g., Connaught Place, Delhi)" />
+    <button onclick="searchLocation()">Search</button>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script>
+        var map = L.map('map').setView([28.6139, 77.2090], 13); // Default: Delhi coordinates
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Fetch parking locations from the backend
+        fetch('http://localhost:3000/api/parkings')
+            .then(response => response.json())
+            .then(parkings => {
+                // Create custom icon for parking
+                var parkingIcon = L.divIcon({
+                    className: 'parking-icon',
+                    html: '🚗', // Using car emoji as the icon
+                    iconSize: [20, 20]
+                });
+
+                // Add markers for each parking location from the API
+                parkings.forEach(function(location) {
+                    L.marker([location.lat, location.lon], { icon: parkingIcon })
+                        .addTo(map)
+                        .bindPopup(location.name);
+                });
+            })
+            .catch(error => console.error('Error fetching parking data:', error));
+
+        // Function to search a location and navigate to it
+        function searchLocation() {
+            var searchQuery = document.getElementById('locationSearch').value;
+
+            if (!searchQuery) {
+                alert("Please enter a location.");
+                return;
+            }
+
+            // Geocode the location using Leaflet Geocoder
+            var geocoder = L.Control.Geocoder.nominatim();
+            geocoder.geocode(searchQuery, function(results) {
+                if (results && results.length > 0) {
+                    var latlng = results[0].center;
+                    map.setView(latlng, 13); // Zoom in to the searched location
+
+                    // Add a marker for the searched location
+                    L.marker(latlng).addTo(map)
+                        .bindPopup("Searched Location: " + results[0].name)
+                        .openPopup();
+
+                    // Add route from searched location to nearby parking
+                    var routeControl = L.Routing.control({
+                        waypoints: [
+                            L.latLng(latlng),
+                            L.latLng(parkings[0].lat, parkings[0].lon) // Choose any parking location here
+                        ],
+                        routeWhileDragging: true
+                    }).addTo(map);
+                } else {
+                    alert("Location not found! Please try another search.");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

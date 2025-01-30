@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Locator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        #map {
+            height: 100vh;
+        }
+
+        .popup {
+            text-align: center;
+        }
+
+        .popup button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .popup button:hover {
+            background-color: #45a049;
+        }
+
+        /* Adjust the icon size here */
+        .parking-icon {
+            font-size: 40px;
+            line-height: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([28.6139, 77.2090], 13); // Default to Delhi
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Create parking icon
+        var parkingIcon = L.divIcon({
+            className: 'parking-icon',
+            html: '🚗', // Using car emoji as the icon
+            iconSize: [40, 40], // Adjusted size for the emoji
+        });
+
+        // Get user's current location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userCoords = [position.coords.latitude, position.coords.longitude];
+
+                    // Add user marker
+                    L.marker(userCoords).addTo(map)
+                        .bindPopup("<b>You are here!</b>")
+                        .openPopup();
+
+                    map.setView(userCoords, 15);
+
+                    // Show nearby parking spots
+                    addParkingSpots(userCoords);
+                },
+                () => {
+                    alert("Unable to fetch your location.");
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by your browser.");
+        }
+
+        // Function to calculate distance between two points (in kilometers)
+        function calculateDistance(coord1, coord2) {
+            const R = 6371; // Radius of Earth in kilometers
+            const dLat = (coord2[0] - coord1[0]) * Math.PI / 180;
+            const dLon = (coord2[1] - coord1[1]) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(coord1[0] * Math.PI / 180) * Math.cos(coord2[0] * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in kilometers
+        }
+
+        // Function to add nearby parking spots
+        function addParkingSpots(userCoords) {
+            const parkingSpots = [
+                { coords: [28.6149, 77.2090], name: "Parking 1", rating: 4.5 },
+                { coords: [28.6155, 77.2075], name: "Parking 2", rating: 4.2 },
+                { coords: [28.6125, 77.2100], name: "Parking 3", rating: 3.9 },
+                { coords: [28.6160, 77.2080], name: "Parking 4", rating: 4.1 },
+                { coords: [28.6170, 77.2110], name: "Parking 5", rating: 3.8 },
+                { coords: [28.6135, 77.2060], name: "Parking 6", rating: 4.0 },
+                { coords: [28.6185, 77.2095], name: "Parking 7", rating: 4.3 },
+                { coords: [28.6115, 77.2070], name: "Parking 8", rating: 3.7 },
+                { coords: [28.6100, 77.2055], name: "Parking 9", rating: 4.4 },
+                { coords: [28.6190, 77.2120], name: "Parking 10", rating: 4.0 },
+            ];
+
+            // Filter parking spots that are within 1 km of the user's location
+            const nearbySpots = parkingSpots.filter(spot => calculateDistance(userCoords, spot.coords) <= 1);
+
+            // Add markers for the nearby parking spots
+            nearbySpots.forEach((spot) => {
+                const marker = L.marker(spot.coords, { icon: parkingIcon, title: spot.name });
+                marker.addTo(map);
+
+                const popupContent = `
+                    <div class="popup">
+                        <b>${spot.name}</b><br>
+                        Rating: ${spot.rating} ⭐<br>
+                        <button onclick="alert('Prebooking for ${spot.name} is not yet available.')">Prebook</button>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+            });
+        }
+    </script>
+</body>
+
+</html>

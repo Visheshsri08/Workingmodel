@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Complaint</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 90%;
+            margin: 5%;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Parking Complaint</h2>
+        <form id="complaintForm">
+            <label for="number_plate">Enter Number Plate:</label>
+            <input type="text" id="number_plate" name="number_plate" placeholder="e.g. ABC-1234" required>
+            
+            <label for="image">Select an Image:</label>
+            <input type="file" id="image" name="image" accept="image/*" required>
+
+            <input type="checkbox" id="subscribe" name="subscribe" value="yes" required>
+            <label for="subscribe">I agree that the above information is correct and if found wrong, I shall be responsible for the same</label>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Simulated database of car owners
+        const carOwners = {
+            "ABC-1234": { name: "John Doe", phone: "9354431461" },
+        };
+
+        // Handle form submission
+        document.getElementById("complaintForm").addEventListener("submit", (event) => {
+            event.preventDefault(); // Prevent form submission
+
+            const numberPlate = document.getElementById("number_plate").value.toUpperCase(); // Get and capitalize number plate
+            const image = document.getElementById("image").files[0]; // Get uploaded image
+
+            if (!numberPlate || !image) {
+                alert("Please fill in all the required fields.");
+                return;
+            }
+
+            const carOwner = carOwners[numberPlate];
+            if (carOwner) {
+                alert(`Alert sent to ${carOwner.name} (Phone: ${carOwner.phone}).`);
+            } else {
+                alert("Car owner not found. Please check the number plate.");
+            }
+        });
+    </script>
+</body>
+<script src="arnav01.js"></script>
+</html>
